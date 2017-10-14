@@ -49,11 +49,13 @@ tests_require = [
 
 CONFIG = {
     'name': 'mls',
+    'url': 'https://github.com/connectome-ai/mls',
+    'download_url': 'https://github.com/connectome-ai/mls/archive/1.1.tar.gz',
     'version': '1.1',
     'description': 'mls is a wrapper around ml code.',
     'author': 'connectome.ai',
     'test_suite': 'mls',
-    'packages': find_packages(),
+    'packages': find_packages(exclude=['tests', '*.tests', '*.tests.*']),
     'tests_require': tests_require,
     'install_requires': required,
     'cmdclass': {
