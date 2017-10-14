@@ -2,7 +2,7 @@
 
 ## Installation
 
-`pip3 install git+https://github.com/connectome-ai/mls`
+`pip3 install myLittleServer`
 
 ## Server creation
 
