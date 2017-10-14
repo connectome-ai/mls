@@ -7,9 +7,6 @@ import subprocess
 
 from setuptools import find_packages, setup
 
-with open('requirements.txt') as f:
-    required = f.read().splitlines()
-
 
 class PylintCommand(distutils.cmd.Command):
     """A custom command to run Pylint on all Python source files."""
@@ -47,6 +44,12 @@ tests_require = [
     'numpy>=1.12.1',
 ]
 
+install_requires = [
+    'json-rpc==1.10.3',
+    'requests>=2.13.0'
+
+]
+
 CONFIG = {
     'name': 'myLittleServer',
     'url': 'https://github.com/connectome-ai/mls',
@@ -57,7 +60,7 @@ CONFIG = {
     'test_suite': 'mls',
     'packages': find_packages(exclude=['tests', '*.tests', '*.tests.*']),
     'tests_require': tests_require,
-    'install_requires': required,
+    'install_requires': install_requires,
     'cmdclass': {
         'pylint': PylintCommand
     },
