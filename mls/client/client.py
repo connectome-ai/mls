@@ -48,13 +48,7 @@ class Client:
 
         return _prepare_output(response['result'])
 
-    def ready(self):
-        """
-        ready tells if server is ready.
-
-        :returns: true or false
-        :raises: raises ConnectionError if server is down
-        """
+    def _ping(self):
         payload = {
             'method': 'ready',
             'params': [],
@@ -71,6 +65,29 @@ class Client:
         ).json()
 
         return response['result']
+
+    def ready(self):
+        """
+        ready tells if server is ready.
+
+        :returns: true or false
+        """
+        try:
+            return self._ping()
+        except requests.exceptions.ConnectionError:
+            return False
+
+    def started(self):
+        """
+        sstarted tells if server started.
+
+        :returns: true or false
+        """
+        try:
+            _ = self._ping()
+            return True
+        except requests.exceptions.ConnectionError:
+            return False
 
     def train(self, data):
         """

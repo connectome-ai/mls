@@ -58,8 +58,10 @@
   # Client initialization
   client = Client(address='http://localhost:3001')
 
+
+  # Check that server launched
+  is_started = client.started()
   # Check that ml module is set up and ready for work
-  # If server is not launched at the moment of request it will raise an exception
   is_ready = client.ready()
 
   # Result of client call is [future](https://docs.python.org/3/library/concurrent.futures.html)

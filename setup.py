@@ -49,7 +49,7 @@ tests_require = [
 
 CONFIG = {
     'name': 'mls',
-    'version': '1.0',
+    'version': '1.1',
     'description': 'mls is a wrapper around ml code.',
     'author': 'connectome.ai',
     'test_suite': 'mls',

@@ -11,6 +11,10 @@ import numpy as np
 from mls import Client, Server, StateMachine
 
 TEST_ALL = os.getenv('TEST_ALL')
+STEP_TIME = 0.1
+SHORTER_SLEEP_TIME = 0.3
+SLEEP_TIME = SHORTER_SLEEP_TIME + STEP_TIME
+LONGER_SLEEP_TIME = SLEEP_TIME + STEP_TIME
 
 
 def _sync_call(addr, data):
@@ -24,11 +28,11 @@ class FittingInterface:
     def __init__(self, long_predict=False, long_init=False):
         self._long_predict = long_predict
         if long_init:
-            sleep(1)
+            sleep(SLEEP_TIME)
 
     def predict(self, data):
         if self._long_predict:
-            sleep(1)
+            sleep(SLEEP_TIME)
 
         return data
 
@@ -40,7 +44,7 @@ class FittingInterface:
 
     def train(self, data):
         if self._long_predict:
-            sleep(1)
+            sleep(SLEEP_TIME)
 
         return data
 
@@ -95,19 +99,14 @@ class TestServer(unittest.TestCase):
                    'long_predict': False, 'long_init': True})
         pr = Process(target=s)
         client = Client(address='http://localhost:36794')
-        with self.assertRaises(Exception):
-            client.ready()
+        self.assertFalse(client.started())
 
         res = client.predict(self._data)
         self.assertIsNotNone(res.exception())
         pr.start()
-        while True:
-            try:
-                is_ready = client.ready()
-                break
-            except:
-                pass
-        self.assertFalse(is_ready)
+        while not client.started():
+            pass
+        self.assertFalse(client.ready())
         while not client.ready():
             pass
         self.assertTrue(client.ready())
@@ -119,7 +118,6 @@ class TestServer(unittest.TestCase):
         pr = Process(target=s)
         client = Client(address='http://localhost:36795')
         pr.start()
-        sleep(0.2)
         while not client.ready():
             pass
         pr.terminate()
@@ -146,7 +144,8 @@ class TestServer(unittest.TestCase):
         now = datetime.now()
         res = client.predict(self._data)
         res = res.result()
-        self.assertTrue(datetime.now() - now > timedelta(seconds=0.7))
+        self.assertTrue(datetime.now() - now >
+                        timedelta(seconds=SLEEP_TIME - STEP_TIME))
         self.assertListEqual(res.tolist(), self._data.tolist())
 
     def test_server_async(self):
@@ -154,30 +153,30 @@ class TestServer(unittest.TestCase):
         now = datetime.now()
         res = client.predict(self._data)
         self.assertFalse(res.done())
-        sleep(1.2)
+        sleep(LONGER_SLEEP_TIME)
         self.assertListEqual(res.result().tolist(), self._data.tolist())
 
     def test_multi_client(self):
         client1 = Client(address=self._long_server_address)
         client2 = Client(address=self._long_server_address)
 
-    @unittest.skipIf(TEST_ALL is None, 'short pipiline')
     def test_server_multi_requests_one_source(self):
         client1 = Client(address=self._long_server_address)
         client2 = Client(address=self._long_server_address)
+        while not client1.ready() and not client2.ready():
+            pass
         res1 = client1.predict(self._data)
-        sleep(0.3)
+        sleep(SHORTER_SLEEP_TIME)
         res2 = client2.predict(self._data)
         self.assertFalse(res1.done())
         self.assertFalse(res2.done())
-        sleep(1)
+        sleep(SLEEP_TIME - SHORTER_SLEEP_TIME + STEP_TIME)
         self.assertTrue(res1.done())
         self.assertFalse(res2.done())
-        sleep(1.2)
+        sleep(SLEEP_TIME)
         self.assertTrue(res1.done())
         self.assertTrue(res2.done())
 
-    @unittest.skipIf(TEST_ALL is None, 'short pipiline')
     def test_server_multi_requests_different_sources(self):
         pr1 = Process(target=_sync_call, args=(
             self._long_server_address, self._data,))
@@ -188,15 +187,15 @@ class TestServer(unittest.TestCase):
         pr2.start()
         pr1.join()
         pr2.join()
-        self.assertTrue(datetime.now() - now > timedelta(seconds=1.9))
+        self.assertTrue(datetime.now() - now >
+                        timedelta(seconds=SLEEP_TIME * 2 - STEP_TIME))
 
-    @unittest.skipIf(TEST_ALL is None, 'short pipiline')
     def test_callback(self):
         client = Client(address=self._long_server_address)
         res = client.predict(self._data)
         res.add_done_callback(
             lambda x: self.assertListEqual(x.result().tolist(), self._data.tolist()))
-        sleep(1.2)
+        sleep(LONGER_SLEEP_TIME)
 
 
 if __name__ == '__main__':
