@@ -48,7 +48,7 @@ tests_require = [
 ]
 
 CONFIG = {
-    'name': 'mls',
+    'name': 'myLittleServer',
     'url': 'https://github.com/connectome-ai/mls',
     'download_url': 'https://github.com/connectome-ai/mls/archive/1.1.tar.gz',
     'version': '1.1',
