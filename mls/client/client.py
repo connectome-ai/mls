@@ -1,7 +1,6 @@
 """Client implementation."""
 
 
-import json
 import os
 from concurrent.futures import ThreadPoolExecutor
 
@@ -28,43 +27,21 @@ class Client:
             self._id = 0
 
     def _send_request(self, method, data):
-        payload = {
-            'method': method,
-            'params': [_prepare_input(data)],
-            'jsonrpc': '2.0',
-            'id': self._id,
-        }
-
-        self._increment_id()
 
         response = requests.post(
             self._address,
-            data=json.dumps(payload),
-            headers={'content-type': 'application/json'}
-        ).json()
+            data=_prepare_input(data),
+            headers={'method': method}
+        )
 
-        if response.get('error', None) is not None:
-            raise ValueError(response['error'])
+        error = response.headers.get('error')
+        if error != '':
+            raise ValueError(error)
 
-        return _prepare_output(response['result'])
+        return _prepare_output(response.content)
 
     def _ping(self):
-        payload = {
-            'method': 'ready',
-            'params': [],
-            'jsonrpc': '2.0',
-            'id': self._id,
-        }
-
-        self._increment_id()
-
-        response = requests.post(
-            self._address,
-            data=json.dumps(payload),
-            headers={'content-type': 'application/json'}
-        ).json()
-
-        return response['result']
+        return self._send_request('ready', None)
 
     def ready(self):
         """

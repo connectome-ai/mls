@@ -1,6 +1,5 @@
 """utils for servers"""
 
-import codecs
 import pickle
 
 
@@ -12,9 +11,9 @@ def serialize_data(func):
     return _function_wrapper
 
 
-def _prepare_output(data):
-    return codecs.encode(pickle.dumps(data), 'base64').decode()
-
-
 def _prepare_input(data):
-    return pickle.loads(codecs.decode(bytes(data, encoding='utf-8'), 'base64'))
+    return pickle.loads(data)
+
+
+def _prepare_output(data):
+    return pickle.dumps(data)

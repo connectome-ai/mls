@@ -3,11 +3,12 @@
 
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from copy import copy
 
-from jsonrpc import JSONRPCResponseManager, dispatcher
+# from jsonrpc import JSONRPCResponseManager, dispatcher
 from werkzeug.serving import run_simple
 from werkzeug.wrappers import Request, Response
+
+from .utils import serialize_data
 
 
 class BaseServer:
@@ -29,7 +30,7 @@ class BaseServer:
         self._address = address
         self._port = port
         self._pool = ThreadPoolExecutor(1)
-        self._dispatcher = copy(dispatcher)
+        self._dispatcher = {}
 
         self._ml_config = ml_config
         if ml_config is not None:
@@ -43,7 +44,8 @@ class BaseServer:
     def _init_ml(self):
         self._ml = self._ml_constructor(**self._ml_config)
 
-    def _ready(self):
+    @serialize_data
+    def _ready(self, _):
         return self._ml is not None
 
     def set_dispatcher(self, route_table, clear=False):
@@ -54,7 +56,7 @@ class BaseServer:
         """
 
         if clear:
-            self._dispatcher = copy(dispatcher)
+            self._dispatcher = {}
         for route, func in route_table.items():
             self._dispatcher[route] = func
 
@@ -72,8 +74,15 @@ class BaseServer:
         @Request.application
         def _application(request):
             # dispatcher is dictionary {<method_name>: callable}
-            response = JSONRPCResponseManager.handle(
-                request.data, self._dispatcher)
-            return Response(response.json, mimetype='application/json')
+            method = request.headers['method']
+            headers = {'error': ''}
+
+            try:
+                response = self._dispatcher[method](request.data)
+            except Exception as e:
+                response = b''
+                headers['error'] = e
+
+            return Response(response, headers=headers)
 
         run_simple(self._address, self._port, _application)

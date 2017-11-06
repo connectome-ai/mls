@@ -49,6 +49,12 @@ class FittingInterface:
         return data
 
 
+class FailingInterface(FittingInterface):
+
+    def predict(self, data):
+        raise ValueError('some error')
+
+
 class TestServer(unittest.TestCase):
 
     @classmethod
@@ -59,16 +65,16 @@ class TestServer(unittest.TestCase):
         cls._data = np.array([[[a, a, a], [a, a, a]], [[a, a, a], [a, a, a]]])
         cls._short_server = Server(
             port=36789, ml=FittingInterface(), log=False)
-        cls._short_server_address = 'http://localhost:36789'
+        cls._short_server_address = 'http://127.0.0.1:36789'
         cls._pr1 = Process(target=cls._short_server)
         cls._long_server = Server(
             port=36790, ml=FittingInterface(True), log=False)
         cls._pr2 = Process(target=cls._long_server)
-        cls._long_server_address = 'http://localhost:36790'
+        cls._long_server_address = 'http://127.0.0.1:36790'
         cls._sm = StateMachine(
             port=36791, ml=FittingInterface(False), log=False)
         cls._pr3 = Process(target=cls._sm)
-        cls._sm_address = 'http://localhost:36791'
+        cls._sm_address = 'http://127.0.0.1:36791'
         cls._pr1.start()
         cls._pr2.start()
         cls._pr3.start()
@@ -98,7 +104,7 @@ class TestServer(unittest.TestCase):
         s = Server(port=36794, ml=FittingInterface, ml_config={
                    'long_predict': False, 'long_init': True})
         pr = Process(target=s)
-        client = Client(address='http://localhost:36794')
+        client = Client(address='http://127.0.0.1:36794')
         self.assertFalse(client.started())
 
         res = client.predict(self._data)
@@ -116,10 +122,23 @@ class TestServer(unittest.TestCase):
         s = Server(port=36795, ml=FittingInterface, ml_config={
                    'long_predict': False, 'long_init': True})
         pr = Process(target=s)
-        client = Client(address='http://localhost:36795')
+        client = Client(address='http://127.0.0.1:36795')
         pr.start()
         while not client.ready():
             pass
+        pr.terminate()
+
+    def test_fails(self):
+        s = Server(port=36795, ml=FailingInterface, ml_config={
+                   'long_predict': False, 'long_init': True})
+        pr = Process(target=s)
+        client = Client(address='http://127.0.0.1:36795')
+        pr.start()
+        while not client.ready():
+            pass
+        with self.assertRaises(ValueError):
+            res = client.predict(self._data)
+            res.result()
         pr.terminate()
 
     def test_init_ml(self):
