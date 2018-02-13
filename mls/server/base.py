@@ -2,6 +2,7 @@
 
 
 import logging
+import traceback
 from concurrent.futures import ThreadPoolExecutor
 
 # from jsonrpc import JSONRPCResponseManager, dispatcher
@@ -81,7 +82,10 @@ class BaseServer:
                 response = self._dispatcher[method](request.data)
             except Exception as e:
                 response = b''
-                headers['error'] = e
+                headers['error'] = str(e)
+                logging.critical(str(e))
+                error = traceback.format_exc()
+                logging.critical(error)
 
             return Response(response, headers=headers)
 
