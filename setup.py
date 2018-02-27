@@ -46,7 +46,7 @@ tests_require = [
 
 install_requires = [
     'requests>=2.13.0',
-    'Werkzeug>=0.12.1'
+    'Werkzeug>=0.14.1'
 ]
 
 CONFIG = {
