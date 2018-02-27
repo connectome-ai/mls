@@ -1,6 +1,6 @@
 """utils for clients"""
 
-import pickle
+import _pickle as pickle
 
 
 def _prepare_input(data):

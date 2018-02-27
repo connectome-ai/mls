@@ -1,6 +1,6 @@
 """utils for servers"""
 
-import pickle
+import _pickle as pickle
 
 
 def serialize_data(func):

@@ -1,6 +1,6 @@
 """Server implementation."""
 
-import pickle
+import _pickle as pickle
 from .base import BaseServer
 from .preparator import EchoPreparator
 from .utils import serialize_data
