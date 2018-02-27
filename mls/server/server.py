@@ -36,9 +36,17 @@ class Server(BaseServer):
 
         self._preparator = preparator
 
-    @serialize_data
+    # @serialize_data
+    # def _predict(self, data):
+    #     return self._ml.predict(data)
     def _predict(self, data):
-        return self._ml.predict(data)
+        predict_data = pickle.loads(data)
+        data = None
+        result = self._ml.predict(predict_data)
+        predict_data = None
+        return_data = pickle.dumps(result)
+        result = None
+        return return_data
 
     @serialize_data
     def _train(self, data):
