@@ -40,7 +40,7 @@ class Server(BaseServer):
     # def _predict(self, data):
     #     return self._ml.predict(data)
     def _predict(self, data):
-        return None
+        return pickle.dumps(None)
         # predict_data = pickle.loads(data)
         # result = self._ml.predict(predict_data)
         # predict_data = None
