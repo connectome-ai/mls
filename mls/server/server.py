@@ -6,7 +6,7 @@ from .preparator import EchoPreparator
 from .utils import serialize_data
 
 import gc
-gc.enable()
+gc.disable()
 gc.set_debug(gc.DEBUG_LEAK)
 
 class Server(BaseServer):
@@ -44,7 +44,7 @@ class Server(BaseServer):
     #     return self._ml.predict(data)
     def _predict(self, data):
         data = None
-        gc.collect()
+        # gc.collect()
         return pickle.dumps(None)
         # predict_data = pickle.loads(data)
         # result = self._ml.predict(predict_data)
