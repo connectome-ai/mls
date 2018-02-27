@@ -43,7 +43,9 @@ class Server(BaseServer):
         predict_data = pickle.loads(data)
         result = self._ml.predict(predict_data)
         predict_data = None
+        data = None
         return_data = pickle.dumps(result)
+        result = None
         return return_data
 
     @serialize_data
