@@ -3,6 +3,8 @@
 
 import logging
 import traceback
+import gc
+import sys
 from concurrent.futures import ThreadPoolExecutor
 
 # from jsonrpc import JSONRPCResponseManager, dispatcher
@@ -22,7 +24,9 @@ class BaseServer:
     :param address: address of a server, keep default value if you don't understand what it's for
     """
 
-    def __init__(self, port, ml, address='0.0.0.0', ml_config=None, log=True):
+    def __init__(self, port, ml, address='0.0.0.0', ml_config=None, log=True, mem_limit=50000000):
+        if not isinstance(mem_limit, int):
+            raise ValueError('mem_limit must be int')
         if not log:
             logging.getLogger('werkzeug').setLevel(logging.ERROR)
             for name, _ in logging.Logger.manager.loggerDict.items():
@@ -40,6 +44,9 @@ class BaseServer:
         else:
             self._ml = ml
 
+        self._total_requests_memory_consumption = 0
+        self._MEMORY_LIMIT = mem_limit
+
         self.set_dispatcher({'ready': self._ready})
 
     def _init_ml(self):
@@ -48,6 +55,22 @@ class BaseServer:
     @serialize_data
     def _ready(self, _):
         return self._ml is not None
+
+    def _check_memory_consumption(self, data):
+        """
+        We got a problem with memory consumption in Werkzeug in large requests (5-10+MB)
+        As it appears Werkzeug scheduler hardly ever clear app memory
+        Here we do it for him
+
+        :param data: request.data
+        """
+
+        if self._total_requests_memory_consumption > self._MEMORY_LIMIT:
+            gc.collect()
+
+            self._total_requests_memory_consumption = 0
+
+        self._total_requests_memory_consumption += sys.getsizeof(data)
 
     def set_dispatcher(self, route_table, clear=False):
         """
@@ -74,6 +97,7 @@ class BaseServer:
 
         @Request.application
         def _application(request):
+            self._check_memory_consumption(request.data)
             # dispatcher is dictionary {<method_name>: callable}
             method = request.headers['method']
             headers = {'error': ''}
