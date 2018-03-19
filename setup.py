@@ -52,8 +52,8 @@ install_requires = [
 CONFIG = {
     'name': 'myLittleServer',
     'url': 'https://github.com/connectome-ai/mls',
-    'download_url': 'https://github.com/connectome-ai/mls/archive/1.2.tar.gz',
-    'version': '1.2.0',
+    'download_url': 'https://github.com/connectome-ai/mls/archive/1.2.3.tar.gz',
+    'version': '1.2.3',
     'description': 'mls is a wrapper around ml code.',
     'author': 'connectome.ai',
     'test_suite': 'mls',
